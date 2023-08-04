@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const logindata = require('../model/details');
+const multer = require('multer');
+// const announcedb = require('../database/upload');
+
 
 router.get('/',(req,res,next)=>{
    logindata.find().then(data=>{
@@ -30,4 +33,42 @@ router.delete('/', (req,res,next)=>{
         res.send("Successfully deleted all data")
     }).catch(next)
 })
+
+
+/*------------- upload -----------------*/
+const storage = multer.diskStorage({
+    destination: 'public/uploads',
+    filename:  (req, file, cb) =>{
+        cb(null,file.originalname);
+    },
+  });
+  
+  const upload = multer({ storage: storage })
+  .single('announcement')
+
+router.post('/upload', (req, res)=>{
+    upload(req, res, (err)=>{
+        if(err){
+            console.log(err);
+        }else{
+            const newImage = new logindata({
+                name:  res.req.file.filename,
+                image: {
+                    data:req.file.filename,
+                    contentType:'image/png'
+                },
+                status: "active"
+
+            })
+            newImage.save()
+            .then(()=>res.send('Successfully uploaded'))
+        }
+    })
+})
+// router.get('/upload',(req,res,next)=>{
+//     announcedb.find().then(data=>{
+//      res.send(data)
+//     })
+//  })
+
 module.exports = router;
